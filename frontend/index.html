@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarvelAura | Emotion-Aware AI</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar: Camera & Avatar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <h1>MarvelAura<span>.ai</span></h1>
+                <p>Emotion-Aware Companion</p>
+            </div>
+            
+            <div class="avatar-container">
+                <!-- Unity WebGL container -->
+                <div id="unityContainer" style="width: 250px; height: 350px; display: none; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 16px; border: 1px solid var(--border-color);"></div>
+                
+                <!-- SVG Avatar (Fallback if Unity is missing) -->
+                <div id="avatarBase" class="avatar-state neutral-state"></div>
+                <div class="emotion-toggle-wrapper">
+                    <button id="emotionToggleBtn" class="emotion-toggle-btn" title="Show emotion display">
+                        <svg id="toggleIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <div class="emotion-badge hidden" id="currentEmotion">Neutral</div>
+                </div>
+            </div>
+
+            <div class="camera-container">
+                <video id="webcamPreview" autoplay playsinline muted></video>
+                <canvas id="webcamCanvas" style="display: none;"></canvas>
+                <div class="camera-overlay">
+                    <span class="recording-dot"></span> Vision Active
+                </div>
+            </div>
+            
+            <div class="status-panel">
+                <div class="status-item">
+                    <span class="status-indicator" id="wsStatus"></span> Connection
+                </div>
+                <div class="status-item">
+                    <span class="status-indicator" id="micStatus"></span> Microphone
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="header-info">
+                    <h2>Your Companion</h2>
+                    <p>Adapting to your mood in real-time</p>
+                </div>
+            </header>
+
+            <div class="chat-history" id="chatHistory">
+                <!-- Messages will appear here -->
+                <div class="message ai">
+                    <div class="bubble">
+                        Hello! I am MarvelAura. I can see and hear how you're feeling. How can I help you today?
+                    </div>
+                </div>
+
+                <!-- Typing Indicator (hidden by default) -->
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+
+            <footer class="chat-input-area">
+                <button id="recordBtn" class="action-btn record-btn" title="Hold to speak">
+                    🎤
+                </button>
+                <div class="input-wrapper">
+                    <input type="text" id="textInput" placeholder="Type a message or use the mic..." autocomplete="off">
+                </div>
+                <button id="sendBtn" class="action-btn send-btn">
+                    ➤
+                </button>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Hidden audio player for TTS -->
+    <audio id="ttsPlayer" style="display:none;"></audio>
+
+    <script src="js/avatar.js?v=3"></script>
+    <script src="js/webcam.js?v=3"></script>
+    <script src="js/audio.js?v=3"></script>
+    <script src="js/app.js?v=3"></script>
+</body>
+</html>

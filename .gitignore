@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.env.*
+
+# Node
+node_modules/
+npm-debug.log*
+
+# IDEs and Tools
+.vscode/
+.idea/
+.gemini/
+
+# Logs and outputs
+*.log
+*.txt
+!requirements.txt
+report.txt
+
+# Certificates
+*.pem
+cert.pem
+key.pem
+
+# Tests
+test_*.py
+test_*.js
+
+# Unused Batch scripts
+frontend_start.bat
+https_frontend_start.bat
+https_start.bat
+
+# AI Artifacts
+walkthrough.md
+implementation_plan.md
+CONTEXT.md
+FOR_YOU.md
+
+# OS
+.DS_Store
+models/  
