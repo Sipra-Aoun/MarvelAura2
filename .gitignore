@@ -32,7 +32,6 @@ test_*.py
 test_*.js
 
 # Unused Batch scripts
-frontend_start.bat
 https_frontend_start.bat
 https_start.bat
 
