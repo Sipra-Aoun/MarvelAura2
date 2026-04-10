@@ -141,9 +141,9 @@ async def websocket_endpoint(websocket: WebSocket):
                         }, websocket)
                         continue
                     
-                    # 3. TTS Generation
-                    # Generate audio file
-                    audio_path = await generate_speech(ai_text)
+                    # 3. TTS Generation with emotion-aware voice
+                    # Generate audio file with voice that matches detected emotion
+                    audio_path = await generate_speech(ai_text, final_emotion)
                     audio_filename = os.path.basename(audio_path) if audio_path else ""
                     
                     # Send complete response
