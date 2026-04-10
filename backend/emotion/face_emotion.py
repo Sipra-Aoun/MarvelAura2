@@ -92,7 +92,7 @@ def _classify_emotion_from_blendshapes(blendshapes):
         "sad": 0.0,
         "angry": 0.0,
         "surprised": 0.0,
-        "neutral": 0.15  # Small baseline so neutral wins when face is relaxed
+        "neutral": 0.10  # Keep a baseline, but let subtle expressions still surface
     }
     
     # --- HAPPY ---
@@ -108,10 +108,11 @@ def _classify_emotion_from_blendshapes(blendshapes):
     # --- SAD ---
     # Frown + inner brow raise + low smile
     sad_score = (
-        frown_avg * 0.40 +
-        brow_inner_up * 0.35 +
-        max(0, 0.1 - smile_avg) * 1.5 +  # Bonus if NOT smiling  
-        mouth_press_avg * 0.10
+        frown_avg * 0.52 +
+        brow_inner_up * 0.42 +
+        max(0, 0.12 - smile_avg) * 1.6 +  # Bonus if NOT smiling
+        max(0, 0.2 - brow_down_avg) * 0.35 +  # Sad is typically less furrowed than angry
+        mouth_press_avg * 0.05
     )
     scores["sad"] = min(1.0, sad_score)
     
@@ -122,7 +123,8 @@ def _classify_emotion_from_blendshapes(blendshapes):
         frown_avg * 0.25 +
         mouth_press_avg * 0.15 +
         max(0, 0.1 - brow_up_avg) * 1.0 +  # Bonus if brows NOT raised
-        max(0, 0.05 - smile_avg) * 2.0  # Bonus if NOT smiling
+        max(0, 0.05 - smile_avg) * 2.0 +  # Bonus if NOT smiling
+        eye_squint_avg * 0.12  # Tension around eyes can indicate anger
     )
     scores["angry"] = min(1.0, angry_score)
     
@@ -135,6 +137,16 @@ def _classify_emotion_from_blendshapes(blendshapes):
         max(0, 0.1 - brow_down_avg) * 1.0  # Bonus if brows NOT furrowed
     )
     scores["surprised"] = min(1.0, surprised_score)
+
+    # Bias sad vs angry when sadness cues are clearly present.
+    sadness_cue = (
+        frown_avg >= 0.18 and
+        brow_inner_up >= 0.12 and
+        smile_avg <= 0.14 and
+        brow_down_avg <= 0.22
+    )
+    if sadness_cue and scores["sad"] >= scores["angry"] * 0.75:
+        scores["sad"] += 0.08
 
     # Find dominant emotion
     top_emotion = max(scores, key=scores.get)

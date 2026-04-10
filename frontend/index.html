@@ -59,6 +59,22 @@
                     <h2>Your Companion</h2>
                     <p>Adapting to your mood in real-time</p>
                 </div>
+                <div class="header-controls">
+                    <div class="provider-wrapper">
+                        <label for="providerSelect">Model</label>
+                        <select id="providerSelect" class="provider-select">
+                            <option value="gemini">Gemini</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="ollama">Ollama (Local)</option>
+                        </select>
+                    </div>
+                    <button id="ttsToggleBtn" class="tts-toggle-btn active" title="Toggle read-aloud (TTS)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a7 7 0 0 1 0 9.9M19.07 4.93a11 11 0 0 1 0 15.66"></path>
+                        </svg>
+                    </button>
+                </div>
             </header>
 
             <div class="chat-history" id="chatHistory">

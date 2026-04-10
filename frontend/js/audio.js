@@ -3,6 +3,11 @@ class AudioController {
         this.ttsPlayer = document.getElementById('ttsPlayer');
         this.micStatus = document.getElementById('micStatus');
         this.isRecording = false;
+        this.isOutputUnlocked = false;
+        this.isTtsEnabled = this.getTtsEnabledPref();
+        this.pendingAudioUrl = null;
+        this.playbackContext = null;
+        this.enablePromptEl = null;
         
         // Listen to TTS player events to drive Unity lip sync
         this.ttsPlayer.onplaying = () => {
@@ -21,7 +26,107 @@ class AudioController {
         this.audioData = [];
         this.onResultCallback = null;
 
+        this.setupOutputUnlockListeners();
         this.initSTT();
+    }
+
+    setupOutputUnlockListeners() {
+        const unlock = () => this.unlockOutput();
+
+        // A successful user gesture typically unlocks audio playback for future replies.
+        document.addEventListener('click', unlock, { once: true });
+        document.addEventListener('touchstart', unlock, { once: true, passive: true });
+        document.addEventListener('keydown', unlock, { once: true });
+    }
+
+    async unlockOutput() {
+        try {
+            if (!this.playbackContext) {
+                this.playbackContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (this.playbackContext.state === 'suspended') {
+                await this.playbackContext.resume();
+            }
+
+            this.isOutputUnlocked = true;
+            this.hideEnableAudioPrompt();
+
+            if (this.pendingAudioUrl) {
+                const retryUrl = this.pendingAudioUrl;
+                this.pendingAudioUrl = null;
+                this.ttsPlayer.src = retryUrl;
+                await this.ttsPlayer.play();
+            }
+        } catch (e) {
+            console.error('Audio unlock failed:', e);
+            this.showEnableAudioPrompt();
+        }
+    }
+
+    showEnableAudioPrompt() {
+        if (this.enablePromptEl) {
+            this.enablePromptEl.style.display = 'flex';
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.id = 'enableAudioPrompt';
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '16px';
+        wrapper.style.right = '16px';
+        wrapper.style.bottom = '16px';
+        wrapper.style.zIndex = '1000';
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'space-between';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '12px';
+        wrapper.style.padding = '12px 14px';
+        wrapper.style.border = '1px solid rgba(255,255,255,0.15)';
+        wrapper.style.borderRadius = '12px';
+        wrapper.style.background = 'rgba(17, 24, 39, 0.95)';
+        wrapper.style.color = '#f9fafb';
+        wrapper.style.fontSize = '14px';
+
+        const text = document.createElement('span');
+        text.textContent = 'Tap Enable Sound to hear voice replies.';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Enable Sound';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '8px';
+        btn.style.padding = '8px 12px';
+        btn.style.background = '#3b82f6';
+        btn.style.color = '#ffffff';
+        btn.style.cursor = 'pointer';
+
+        btn.addEventListener('click', () => this.unlockOutput());
+
+        wrapper.appendChild(text);
+        wrapper.appendChild(btn);
+        document.body.appendChild(wrapper);
+
+        this.enablePromptEl = wrapper;
+    }
+
+    hideEnableAudioPrompt() {
+        if (!this.enablePromptEl) return;
+        this.enablePromptEl.style.display = 'none';
+    }
+
+    getTtsEnabledPref() {
+        const saved = localStorage.getItem('ttsEnabled');
+        return saved === null ? true : saved === 'true';
+    }
+
+    setTtsEnabledPref(enabled) {
+        this.isTtsEnabled = enabled;
+        localStorage.setItem('ttsEnabled', enabled.toString());
+    }
+
+    buildPlayableUrl(url) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}t=${Date.now()}`;
     }
 
     async initSTT() {
@@ -99,10 +204,29 @@ class AudioController {
         }
     }
     
-    playAudio(url) {
+    async playAudio(url) {
+        if (!this.isTtsEnabled) {
+            console.log('[Audio] TTS is disabled');
+            return;
+        }
+
+        const playableUrl = this.buildPlayableUrl(url);
+        this.pendingAudioUrl = playableUrl;
+
         // Append cache buster to force reload
-        this.ttsPlayer.src = url + "?t=" + new Date().getTime();
-        this.ttsPlayer.play().catch(e => console.error("Audio play error:", e));
+        this.ttsPlayer.src = playableUrl;
+
+        try {
+            await this.ttsPlayer.play();
+            this.pendingAudioUrl = null;
+            this.hideEnableAudioPrompt();
+        } catch (e) {
+            if (e && e.name === 'NotAllowedError') {
+                this.showEnableAudioPrompt();
+            } else {
+                console.error('Audio play error:', e);
+            }
+        }
     }
 }
 

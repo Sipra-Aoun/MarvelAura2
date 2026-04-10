@@ -75,6 +75,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 user_text = payload.get("text", "")
                 face_data = payload.get("face_frame", "")
                 voice_data = payload.get("voice_audio", "") # base64 encoded audio or null if using browser STT
+                llm_provider = payload.get("llm_provider", "auto")
                 
                 # If voice_data is provided, perform STT
                 if voice_data:
@@ -131,7 +132,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 if user_text.strip():
                     # 2. LLM Processing
                     try:
-                        ai_text = await generate_response(user_text, final_emotion)
+                        ai_text = await generate_response(user_text, final_emotion, llm_provider)
                     except Exception as e:
                         print(f"LLM Processing Error: {e}")
                         await manager.send_json({

@@ -6,6 +6,8 @@ class App {
         this.textInput = document.getElementById('textInput');
         this.sendBtn = document.getElementById('sendBtn');
         this.recordBtn = document.getElementById('recordBtn');
+        this.providerSelect = document.getElementById('providerSelect');
+        this.ttsToggleBtn = document.getElementById('ttsToggleBtn');
         this.typingIndicator = document.getElementById('typingIndicator');
         this.visionDot = document.querySelector('.recording-dot');
         
@@ -24,6 +26,23 @@ class App {
         this.textInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.handleSendText();
         });
+
+        if (this.providerSelect) {
+            const savedProvider = localStorage.getItem('llmProvider');
+            const validProviders = ['gemini', 'openai', 'ollama'];
+            if (savedProvider && validProviders.includes(savedProvider)) {
+                this.providerSelect.value = savedProvider;
+            }
+
+            this.providerSelect.addEventListener('change', () => {
+                localStorage.setItem('llmProvider', this.providerSelect.value);
+            });
+        }
+
+        if (this.ttsToggleBtn) {
+            this.updateTtsButtonState();
+            this.ttsToggleBtn.addEventListener('click', () => this.toggleTts());
+        }
         
         // Mic button hold to talk (simulated toggle for simplicity)
         this.recordBtn.addEventListener('mousedown', () => this.startVoiceInteraction());
@@ -148,7 +167,8 @@ class App {
                 type: 'chat',
                 text: '', // Empty text means just evaluate emotion silently
                 face_frame: frame,
-                voice_audio: null
+                voice_audio: null,
+                llm_provider: this.getSelectedProvider()
             }));
         }
     }
@@ -189,8 +209,16 @@ class App {
             type: 'chat',
             text: text,
             face_frame: frame,
-            voice_audio: audioBase64
+            voice_audio: audioBase64,
+            llm_provider: this.getSelectedProvider()
         }));
+    }
+
+    getSelectedProvider() {
+        if (!this.providerSelect) return 'auto';
+        const selected = this.providerSelect.value;
+        const validProviders = ['gemini', 'openai', 'ollama'];
+        return validProviders.includes(selected) ? selected : 'auto';
     }
 
     addMessage(text, sender) {
@@ -214,6 +242,26 @@ class App {
 
     scrollToBottom() {
         this.chatHistory.scrollTop = this.chatHistory.scrollHeight;
+    }
+
+    toggleTts() {
+        const newState = !window.audioController.isTtsEnabled;
+        window.audioController.setTtsEnabledPref(newState);
+        this.updateTtsButtonState();
+    }
+
+    updateTtsButtonState() {
+        if (!this.ttsToggleBtn) return;
+        const enabled = window.audioController.isTtsEnabled;
+        if (enabled) {
+            this.ttsToggleBtn.classList.add('active');
+            this.ttsToggleBtn.classList.remove('disabled');
+            this.ttsToggleBtn.title = 'Read-aloud is ON. Click to disable.';
+        } else {
+            this.ttsToggleBtn.classList.remove('active');
+            this.ttsToggleBtn.classList.add('disabled');
+            this.ttsToggleBtn.title = 'Read-aloud is OFF. Click to enable.';
+        }
     }
 }
 
